@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Mapa Colaborativo - Roubos/Furtos</title>
+  <meta name="theme-color" content="#111111" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Leaflet (mapa grátis) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Heatmap plugin -->
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">
+      <div class="appname">Mapa Colaborativo</div>
+      <div class="subtitle">Roubos • Furtos • Tentativas</div>
+    </div>
+
+    <div class="actions">
+      <button id="btnLocate" class="btn">Minha localização</button>
+      <button id="btnReport" class="btn primary">Registrar ocorrência</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="map"></div>
+
+    <div class="panel" id="panel">
+      <div class="panel-header">
+        <div class="panel-title">Registrar ocorrência</div>
+        <button id="btnClosePanel" class="btn tiny">Fechar</button>
+      </div>
+
+      <div class="panel-body">
+        <div class="field">
+          <label>Modo de local</label>
+          <div class="seg">
+            <button id="modeGPS" class="segbtn active">Usar GPS</button>
+            <button id="modeManual" class="segbtn">Marcar no mapa</button>
+          </div>
+          <div class="hint" id="gpsHint">O navegador vai pedir permissão. Mostramos a precisão (em metros) quando disponível.</div>
+          <div class="hint" id="manualHint" style="display:none;">Toque no mapa para escolher o ponto. Você pode arrastar o marcador.</div>
+        </div>
+
+        <div class="field">
+          <label>Tipo</label>
+          <select id="type">
+            <option value="roubo">Roubo</option>
+            <option value="furto">Furto</option>
+            <option value="tentativa">Tentativa</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Data e hora (opcional)</label>
+          <input id="occurredAt" type="datetime-local" />
+          <div class="hint">Se deixar em branco, usamos o horário de agora.</div>
+        </div>
+
+        <div class="field">
+          <label>Observação (opcional)</label>
+          <textarea id="note" rows="3" placeholder="Ex.: Saída do metrô, levaram celular. Não informe nomes, placas ou dados pessoais."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Privacidade</label>
+          <div class="hint">
+            Para proteger quem reporta, o app pode mostrar o ponto ligeiramente “aproximado” no mapa público (ex.: ~50m).
+            Isso é configurável no <code>app.js</code>.
+          </div>
+        </div>
+
+        <div class="field row">
+          <button id="btnSubmit" class="btn primary">Enviar</button>
+          <button id="btnCancel" class="btn">Cancelar</button>
+        </div>
+
+        <div class="status" id="status"></div>
+      </div>
+    </div>
+
+    <div class="filters" id="filters">
+      <div class="filters-row">
+        <label>Mostrar:</label>
+        <select id="range">
+          <option value="7">Últimos 7 dias</option>
+          <option value="30" selected>Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="365">Últimos 12 meses</option>
+        </select>
+
+        <label>Tipo:</label>
+        <select id="filterType">
+          <option value="all" selected>Todos</option>
+          <option value="roubo">Roubo</option>
+          <option value="furto">Furto</option>
+          <option value="tentativa">Tentativa</option>
+          <option value="outro">Outro</option>
+        </select>
+
+        <button id="btnRefresh" class="btn">Atualizar</button>
+      </div>
+      <div class="legend">
+        <span class="dot"></span> pontos individuais • <span class="heat"></span> mapa de calor
+      </div>
+      <div class="smallprint">
+        Dados colaborativos (não oficiais). Em caso de crime, registre BO/denuncie pelos canais oficiais.
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
