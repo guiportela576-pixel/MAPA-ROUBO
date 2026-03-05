@@ -8,8 +8,8 @@
 //    - outro: azul
 //
 // Configure aqui:
-const SUPABASE_URL = "";      // cole seu Project URL (https://xxxx.supabase.co)
-const SUPABASE_ANON_KEY = ""; // cole sua Publishable key (sb_publishable_...)
+const SUPABASE_URL = "https://dzqxjxjowffsycleaing.supabase.co";      // cole seu Project URL (https://xxxx.supabase.co)
+const SUPABASE_ANON_KEY = "sb_publishable_pTejfMN_InaVgdfxiyrdQQ_5ptGF_Yo"; // cole sua Publishable key (sb_publishable_...)
 const SUPABASE_TABLE = "incidents";
 
 // Privacidade: desloca levemente o ponto na VISUALIZAÇÃO pública (não altera o dado salvo).
