@@ -1,11 +1,16 @@
 {
-  "name": "Mapa Colaborativo (Roubos/Furtos)",
-  "short_name": "Mapa Crime",
+  "name": "Mapa Colaborativo",
+  "short_name": "MapaCrime",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b0b0c",
   "theme_color": "#111111",
   "icons": [
+    {
+      "src": "icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
