@@ -3,8 +3,8 @@
 //
 // Se preferir outro backend depois, dá para trocar só as funções fetchIncidents() e createIncident().
 
-const SUPABASE_URL = "";      // <-- COLE AQUI
-const SUPABASE_ANON_KEY = ""; // <-- COLE AQUI
+const SUPABASE_URL = "https://dzqxjxjowffsycleaing.supabase.co";      // <-- COLE AQUI
+const SUPABASE_ANON_KEY = "sb_publishable_pTejfMN_InaVgdfxiyrdQQ_5ptGF_Yo"; // <-- COLE AQUI
 const SUPABASE_TABLE = "incidents";
 
 // Privacidade: desloca levemente o ponto na visualização pública para reduzir risco de expor casa/rotina.
