@@ -2,8 +2,8 @@
 // Versão melhorada do app.js
 // Detecta cidade automaticamente e centraliza mapa
 
-const SUPABASE_URL = "";      
-const SUPABASE_ANON_KEY = ""; 
+const SUPABASE_URL = "https://dzqxjxjowffsycleaing.supabase.co";      
+const SUPABASE_ANON_KEY = "sb_publishable_pTejfMN_InaVgdfxiyrdQQ_5ptGF_Yo"; 
 const SUPABASE_TABLE = "incidents";
 
 let map, pointsLayer, heatLayer;
