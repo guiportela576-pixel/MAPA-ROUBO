@@ -1,0 +1,21 @@
+DRONEPOL SP — COMO PUBLICAR NO GITHUB
+
+1) Descompacte o arquivo ZIP.
+2) Abra o seu repositório no GitHub.
+3) Envie TUDO que está dentro da pasta dronepol_clima para a RAIZ do repositório.
+   Devem aparecer na raiz: index.html, app.js, styles.css, manifest.webmanifest, service-worker.js e a pasta icons.
+4) No GitHub, entre em Settings > Pages.
+5) Em Build and deployment, selecione Deploy from a branch.
+6) Branch: main | pasta: /(root) | Save.
+7) Abra o endereço que o GitHub Pages gerar.
+8) No iPhone: abra pelo Safari > Compartilhar > Adicionar à Tela de Início.
+
+IMPORTANTE
+- Autorize a localização quando o navegador pedir.
+- GPS no navegador funciona corretamente quando o site está em HTTPS. GitHub Pages usa HTTPS.
+- Clima/previsão dependem de internet para atualizar, mas a última previsão fica salva no aparelho.
+- O mapa usa OpenStreetMap e a busca de aeródromos é apenas informativa.
+- Confirme espaço aéreo e autorizações nas fontes oficiais do DECEA.
+- "Favorável" no aplicativo significa SOMENTE que o clima está dentro dos limites configurados da aeronave.
+
+Se você quiser alterar algum detalhe depois, trabalhe sempre sobre esta versão para não perder funções.

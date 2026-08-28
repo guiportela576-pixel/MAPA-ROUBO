@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1017" />
+  <meta name="description" content="DRONEPOL SP — apoio meteorológico e checklist operacional para pilotos de UAS." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DRONEPOL" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>DRONEPOL SP — Operações UAS</title>
+</head>
+<body>
+  <div id="offlineBanner" class="offline-banner hidden">Sem conexão — exibindo os últimos dados salvos quando disponíveis.</div>
+
+  <header class="app-header">
+    <div>
+      <div class="brand-row">
+        <div class="brand-mark">DP</div>
+        <div>
+          <h1>DRONEPOL SP</h1>
+          <p>Central Operacional UAS</p>
+        </div>
+      </div>
+    </div>
+    <button id="refreshBtn" class="icon-btn" aria-label="Atualizar dados" title="Atualizar">↻</button>
+  </header>
+
+  <main id="app" class="app-shell">
+    <!-- DASHBOARD -->
+    <section class="view active" data-view="dashboard">
+      <div class="location-row card compact">
+        <div>
+          <span class="eyebrow">LOCAL DA OPERAÇÃO</span>
+          <strong id="locationName">Aguardando localização</strong>
+          <small id="coordsText">Ative a localização para iniciar</small>
+        </div>
+        <button id="locateBtn" class="btn secondary small">Usar GPS</button>
+      </div>
+
+      <div id="missionStatus" class="mission-status neutral">
+        <span class="status-dot"></span>
+        <div>
+          <span class="eyebrow">STATUS OPERACIONAL</span>
+          <strong id="missionStatusTitle">AGUARDANDO DADOS</strong>
+          <small id="missionStatusSubtitle">O sistema não substitui decisão do RPIC nem autorização oficial.</small>
+        </div>
+      </div>
+
+      <div class="status-grid">
+        <button class="status-card" data-goto="weather">
+          <span class="status-icon">🌦️</span>
+          <div><small>METEOROLOGIA</small><strong id="dashWeather">—</strong><span id="dashWeatherReason">Sem dados</span></div>
+        </button>
+        <button class="status-card" data-goto="airspace">
+          <span class="status-icon">🛰️</span>
+          <div><small>ESPAÇO AÉREO</small><strong id="dashAirspace">VERIFICAR</strong><span>Consulta oficial necessária</span></div>
+        </button>
+        <button class="status-card" data-goto="aircraft">
+          <span class="status-icon">🚁</span>
+          <div><small>AERONAVE</small><strong id="dashAircraft">Matrice 4T</strong><span id="dashAircraftLimits">Perfil operacional</span></div>
+        </button>
+        <button class="status-card" data-goto="checklist">
+          <span class="status-icon">✅</span>
+          <div><small>CHECKLIST</small><strong id="dashChecklist">0%</strong><span id="dashChecklistText">Pré-voo pendente</span></div>
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">AGORA</span>
+            <h2>Condições essenciais</h2>
+          </div>
+          <span id="dataAge" class="freshness">—</span>
+        </div>
+        <div class="metric-grid four">
+          <div class="metric"><span>Vento</span><strong id="quickWind">—</strong><small id="quickWindDir">—</small></div>
+          <div class="metric"><span>Rajadas</span><strong id="quickGust">—</strong><small id="gustLimitQuick">limite: —</small></div>
+          <div class="metric"><span>Chuva</span><strong id="quickRain">—</strong><small id="quickRainProb">—</small></div>
+          <div class="metric"><span>Visibilidade</span><strong id="quickVisibility">—</strong><small>estimativa modelada</small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <span class="eyebrow">JANELA OPERACIONAL</span>
+            <h2>Próximas horas</h2>
+          </div>
+          <span id="windowSummary" class="pill">—</span>
+        </div>
+        <div id="hourlyStrip" class="hourly-strip empty-state">Aguardando dados meteorológicos.</div>
+      </div>
+
+      <div class="card warning-card">
+        <strong>Importante</strong>
+        <p>“Favorável” neste app significa apenas que os parâmetros meteorológicos configurados estão dentro dos limites do perfil selecionado. Não significa autorização de voo, liberação de espaço aéreo ou conformidade automática com a operação.</p>
+      </div>
+    </section>
+
+    <!-- WEATHER -->
+    <section class="view" data-view="weather">
+      <div class="page-heading">
+        <div><span class="eyebrow">CONDIÇÕES ATUAIS</span><h2>Meteorologia</h2></div>
+        <span id="weatherSourceBadge" class="pill">Open-Meteo</span>
+      </div>
+
+      <div class="card hero-weather">
+        <div class="temp-block">
+          <span id="weatherEmoji" class="weather-emoji">🌤️</span>
+          <div><strong id="temperature">—</strong><small id="weatherDescription">Aguardando</small></div>
+        </div>
+        <div class="weather-summary-list">
+          <div><span>Sensação</span><strong id="feelsLike">—</strong></div>
+          <div><span>Umidade</span><strong id="humidity">—</strong></div>
+          <div><span>Pressão</span><strong id="pressure">—</strong></div>
+          <div><span>Nuvens</span><strong id="cloudCover">—</strong></div>
+        </div>
+      </div>
+
+      <div class="metric-grid three">
+        <div class="card metric big"><span>Vento médio</span><strong id="windSpeed">—</strong><small id="windDirection">—</small></div>
+        <div class="card metric big"><span>Rajadas</span><strong id="windGust">—</strong><small id="windEvaluation">—</small></div>
+        <div class="card metric big"><span>Precipitação</span><strong id="precipitation">—</strong><small id="rainEvaluation">—</small></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">AMBIENTE</span><h2>Detalhes adicionais</h2></div></div>
+        <div class="metric-grid four">
+          <div class="metric"><span>Visibilidade</span><strong id="weatherVisibility">—</strong><small>estimativa modelada</small></div>
+          <div class="metric"><span>Ponto de orvalho</span><strong id="dewPoint">—</strong><small>calculado</small></div>
+          <div class="metric"><span>Nascer do sol</span><strong id="sunrise">—</strong><small>horário local</small></div>
+          <div class="metric"><span>Pôr do sol</span><strong id="sunset">—</strong><small>horário local</small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">PERFIL SELECIONADO</span><h2>Limites configurados</h2></div><button class="btn link small" data-goto="aircraft">Editar</button></div>
+        <div class="limits-grid">
+          <div><span>Vento</span><strong id="limitWind">—</strong></div>
+          <div><span>Rajada</span><strong id="limitGust">—</strong></div>
+          <div><span>Chuva</span><strong id="limitRain">—</strong></div>
+          <div><span>Visibilidade mín.</span><strong id="limitVis">—</strong></div>
+        </div>
+        <p class="note">Os limites são parâmetros operacionais configuráveis no app. Confirme sempre o manual da aeronave e as condições da missão.</p>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">GNSS DO DISPOSITIVO</span><h2>Localização</h2></div></div>
+        <div class="metric-grid three">
+          <div class="metric"><span>Latitude</span><strong id="gpsLat">—</strong></div>
+          <div class="metric"><span>Longitude</span><strong id="gpsLon">—</strong></div>
+          <div class="metric"><span>Precisão</span><strong id="gpsAccuracy">—</strong></div>
+        </div>
+        <p class="note">O navegador fornece posição e precisão estimada. Quantidade real de satélites e HDOP não são inventados pelo app quando o dispositivo não os expõe.</p>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">CLIMA ESPACIAL</span><h2>Índice Kp</h2></div><span id="kpSource" class="freshness">NOAA SWPC</span></div>
+        <div class="kp-row">
+          <div id="kpGauge" class="kp-gauge"><strong id="kpValue">—</strong><span>Kp</span></div>
+          <div><strong id="kpStatus">Aguardando</strong><p id="kpDescription">O índice é apresentado como informação complementar; não substitui diagnóstico do sistema GNSS da aeronave.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORECAST -->
+    <section class="view" data-view="forecast">
+      <div class="page-heading"><div><span class="eyebrow">PLANEJAMENTO</span><h2>Previsão</h2></div><span class="pill">7 dias</span></div>
+
+      <div class="card chart-card">
+        <div class="section-title-row"><div><span class="eyebrow">PRÓXIMAS 24 HORAS</span><h2>Vento × rajadas</h2></div></div>
+        <div class="chart-wrap"><canvas id="windChart"></canvas></div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="section-title-row"><div><span class="eyebrow">PRÓXIMAS 24 HORAS</span><h2>Precipitação</h2></div></div>
+        <div class="chart-wrap"><canvas id="rainChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">RESUMO DIÁRIO</span><h2>Próximos dias</h2></div></div>
+        <div id="dailyForecast" class="daily-list empty-state">Aguardando dados.</div>
+      </div>
+    </section>
+
+    <!-- AIRSPACE -->
+    <section class="view" data-view="airspace">
+      <div class="page-heading"><div><span class="eyebrow">CONSCIÊNCIA SITUACIONAL</span><h2>Mapa e espaço aéreo</h2></div><span class="pill warning">Verificação obrigatória</span></div>
+
+      <div class="card map-card"><div id="map"></div></div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">PROXIMIDADES</span><h2>Aeródromos mapeados</h2></div><button id="scanAerodromesBtn" class="btn secondary small">Buscar</button></div>
+        <div id="aerodromeList" class="aerodrome-list empty-state">Use sua localização e toque em “Buscar”.</div>
+        <p class="note">Os pontos do mapa são obtidos do OpenStreetMap/Overpass e servem apenas como consciência situacional. A ausência de um ponto não comprova ausência de aeródromo, heliponto, área condicionada ou restrição.</p>
+      </div>
+
+      <div class="split-cards">
+        <div class="card source-card">
+          <span class="source-tag official">OFICIAL</span>
+          <h3>SARPAS / DECEA</h3>
+          <p>Solicitação e consulta de acesso ao espaço aéreo para UAS.</p>
+          <a class="btn primary" href="https://www.decea.mil.br/drone/" target="_blank" rel="noopener">Abrir Portal DRONE/UAS</a>
+        </div>
+        <div class="card source-card">
+          <span class="source-tag official">OFICIAL</span>
+          <h3>AISWEB</h3>
+          <p>Informações aeronáuticas, cartas e produtos AIS.</p>
+          <a class="btn secondary" href="https://aisweb.decea.mil.br/" target="_blank" rel="noopener">Abrir AISWEB</a>
+        </div>
+        <div class="card source-card">
+          <span class="source-tag official">OFICIAL</span>
+          <h3>REDEMET</h3>
+          <p>Produtos meteorológicos aeronáuticos do DECEA.</p>
+          <a class="btn secondary" href="https://redemet.decea.mil.br/" target="_blank" rel="noopener">Abrir REDEMET</a>
+        </div>
+        <div class="card source-card">
+          <span class="source-tag manufacturer">FABRICANTE</span>
+          <h3>DJI FlySafe</h3>
+          <p>Geofencing do fabricante. Não equivale a autorização de espaço aéreo.</p>
+          <a class="btn secondary" href="https://fly-safe.dji.com/" target="_blank" rel="noopener">Abrir DJI FlySafe</a>
+        </div>
+      </div>
+
+      <div class="card danger-card">
+        <strong>Separação necessária</strong>
+        <p>Geofence do fabricante, dados cartográficos e autorização oficial são camadas diferentes. O app não converte distância de aeródromo em autorização automática e não usa uma regra única de altitude como resposta legal universal.</p>
+      </div>
+    </section>
+
+    <!-- METAR -->
+    <section class="view" data-view="metar">
+      <div class="page-heading"><div><span class="eyebrow">METEOROLOGIA AERONÁUTICA</span><h2>METAR / TAF</h2></div><span class="pill">Apoio</span></div>
+
+      <div class="card">
+        <div class="field-row">
+          <label>Indicador ICAO
+            <input id="icaoInput" type="text" maxlength="4" placeholder="Ex.: SBST" autocomplete="off" autocapitalize="characters" />
+          </label>
+          <button id="saveIcaoBtn" class="btn primary">Salvar</button>
+        </div>
+        <p class="note">Por segurança e compatibilidade com GitHub Pages, esta versão não promete consulta automática a um serviço que bloqueia requisições diretas do navegador. Use os atalhos oficiais abaixo ou cole o METAR/TAF para análise local.</p>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">METAR</span><h2>Observação atual</h2></div><button id="decodeMetarBtn" class="btn secondary small">Interpretar</button></div>
+        <textarea id="metarText" rows="4" placeholder="Cole aqui o METAR, por exemplo: METAR SBST ..."></textarea>
+        <div id="metarDecoded" class="decoded-box empty-state">Cole um METAR e toque em “Interpretar”.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">TAF</span><h2>Previsão de aeródromo</h2></div></div>
+        <textarea id="tafText" rows="5" placeholder="Cole aqui o TAF para manter junto da missão."></textarea>
+        <button id="saveTafBtn" class="btn secondary full">Salvar TAF localmente</button>
+      </div>
+
+      <div class="split-cards two">
+        <div class="card source-card"><span class="source-tag official">OFICIAL</span><h3>REDEMET</h3><p>Consulte os produtos aeronáuticos disponíveis para sua região.</p><a class="btn primary" href="https://redemet.decea.mil.br/" target="_blank" rel="noopener">Consultar</a></div>
+        <div class="card source-card"><span class="source-tag reference">REFERÊNCIA</span><h3>Aviation Weather Center</h3><p>API pública mundial, porém sem CORS direto para PWA estático.</p><a class="btn secondary" href="https://aviationweather.gov/" target="_blank" rel="noopener">Abrir</a></div>
+      </div>
+    </section>
+
+    <!-- ANALYSIS -->
+    <section class="view" data-view="analysis">
+      <div class="page-heading"><div><span class="eyebrow">ANÁLISE EXPLICÁVEL</span><h2>Apoio à decisão</h2></div><span id="analysisBadge" class="pill">—</span></div>
+
+      <div id="analysisHero" class="analysis-hero neutral">
+        <div class="analysis-icon">◉</div>
+        <div><span class="eyebrow">METEOROLOGIA</span><strong id="analysisTitle">AGUARDANDO DADOS</strong><p id="analysisSubtitle">A conclusão será baseada nos limites configurados para a aeronave.</p></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">POR QUE?</span><h2>Critérios avaliados</h2></div></div>
+        <div id="analysisCriteria" class="criteria-list empty-state">Aguardando dados.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row"><div><span class="eyebrow">MELHOR JANELA</span><h2>Próximas horas</h2></div></div>
+        <div id="bestWindow" class="best-window empty-state">Aguardando previsão.</div>
+      </div>
+
+      <div class="card warning-card">
+        <strong>Conclusão operacional ≠ autorização</strong>
+        <p>A análise automática se limita a dados meteorológicos e parâmetros configurados. Espaço aéreo, restrições temporárias, NOTAM, coordenação, documentação, ARO e decisão do RPIC permanecem verificações independentes.</p>
+      </div>
+    </section>
+
+    <!-- CHECKLIST -->
+    <section class="view" data-view="checklist">
+      <div class="page-heading"><div><span class="eyebrow">PRÉ-VOO</span><h2>Checklist operacional</h2></div><button id="resetChecklistBtn" class="btn link small">Zerar</button></div>
+      <div class="progress-card card">
+        <div class="progress-top"><strong id="checklistPercent">0%</strong><span id="checklistCount">0/0 itens</span></div>
+        <div class="progress-track"><div id="checklistBar" class="progress-bar"></div></div>
+      </div>
+      <div id="checklistGroups"></div>
+    </section>
+
+    <!-- AIRCRAFT -->
+    <section class="view" data-view="aircraft">
+      <div class="page-heading"><div><span class="eyebrow">PERFIL OPERACIONAL</span><h2>Aeronave</h2></div><span class="pill">Configurável</span></div>
+
+      <div class="card">
+        <label>Perfil
+          <select id="aircraftSelect"></select>
+        </label>
+        <div class="form-grid two">
+          <label>Nome<input id="aircraftName" type="text" /></label>
+          <label>Modelo<input id="aircraftModel" type="text" /></label>
+          <label>Vento máx. operacional (km/h)<input id="aircraftWind" type="number" min="1" step="0.1" /></label>
+          <label>Rajada máx. operacional (km/h)<input id="aircraftGust" type="number" min="1" step="0.1" /></label>
+          <label>Precipitação máx. (mm/h)<input id="aircraftRain" type="number" min="0" step="0.1" /></label>
+          <label>Visibilidade mínima (km)<input id="aircraftVis" type="number" min="0" step="0.5" /></label>
+        </div>
+        <button id="saveAircraftBtn" class="btn primary full">Salvar perfil</button>
+        <p class="note">Os valores iniciais são apenas um ponto de partida operacional e devem ser conferidos/ajustados pelo usuário conforme manual, política da unidade e cenário da missão. O app não apresenta esses números como limites legais.</p>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" data-view="settings">
+      <div class="page-heading"><div><span class="eyebrow">APLICATIVO</span><h2>Configurações</h2></div><span id="appVersion" class="pill">v1.0.0</span></div>
+
+      <div class="card">
+        <h3>Dados e privacidade</h3>
+        <div class="setting-row"><div><strong>Localização</strong><span>Utilizada apenas no navegador para consultar clima e mapa.</span></div><button id="settingsLocateBtn" class="btn secondary small">Atualizar</button></div>
+        <div class="setting-row"><div><strong>Dados locais</strong><span>Checklist, perfil da aeronave e última previsão ficam no aparelho.</span></div><button id="clearLocalBtn" class="btn danger small">Limpar</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Modo de teste</h3>
+        <p>Simulações ficam separadas do modo operacional para evitar alteração acidental dos dados reais.</p>
+        <label class="switch-row"><span>Ativar modo de teste</span><input id="testModeToggle" type="checkbox" /></label>
+        <div id="testPanel" class="test-panel hidden">
+          <button class="btn secondary" data-test="wind">Vento alto</button>
+          <button class="btn secondary" data-test="rain">Chuva forte</button>
+          <button class="btn secondary" data-test="good">Condição boa</button>
+          <button class="btn danger" data-test="reset">Voltar aos dados reais</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Fontes</h3>
+        <ul class="source-list">
+          <li><strong>Open-Meteo</strong><span>previsão meteorológica modelada</span></li>
+          <li><strong>NOAA SWPC</strong><span>índice Kp</span></li>
+          <li><strong>OpenStreetMap / Overpass</strong><span>pontos cartográficos de aeródromos</span></li>
+          <li><strong>DECEA</strong><span>SARPAS, AISWEB e REDEMET por links oficiais</span></li>
+        </ul>
+      </div>
+
+      <div class="card warning-card"><strong>Uso operacional</strong><p>Este aplicativo é ferramenta de apoio. Não substitui manuais, normas, autorizações, briefings, ARO, NOTAM, coordenação com órgãos ATS quando aplicável ou decisão do piloto remoto em comando.</p></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegação principal">
+    <button class="nav-btn active" data-view-target="dashboard"><span>⌂</span><small>Início</small></button>
+    <button class="nav-btn" data-view-target="weather"><span>☁</span><small>Clima</small></button>
+    <button class="nav-btn" data-view-target="forecast"><span>⌁</span><small>Previsão</small></button>
+    <button class="nav-btn" data-view-target="airspace"><span>◎</span><small>Mapa</small></button>
+    <button class="nav-btn" data-view-target="analysis"><span>◉</span><small>Análise</small></button>
+    <button class="nav-btn" data-view-target="checklist"><span>✓</span><small>Checklist</small></button>
+    <button class="nav-btn more-btn" data-view-target="settings"><span>⋯</span><small>Mais</small></button>
+  </nav>
+
+  <div id="moreSheet" class="sheet hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-close-sheet></div>
+    <div class="sheet-card">
+      <div class="sheet-handle"></div>
+      <button data-sheet-view="metar"><span>METAR / TAF</span><small>Meteorologia aeronáutica</small></button>
+      <button data-sheet-view="aircraft"><span>Aeronave</span><small>Perfil e limites operacionais</small></button>
+      <button data-sheet-view="settings"><span>Configurações</span><small>Dados, fontes e modo de teste</small></button>
+      <button data-close-sheet class="sheet-close">Fechar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>
